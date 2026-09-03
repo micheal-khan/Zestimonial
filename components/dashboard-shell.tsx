@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Code2, FileDown, LayoutGrid, MessageSquareQuote, Send } from 'lucide-react';
+import { Code2, FileDown, LayoutGrid, MessageSquareQuote, Send, Settings } from 'lucide-react';
 
 const nav = [
   { href: '/', label: 'Overview', icon: LayoutGrid },
@@ -10,6 +10,7 @@ const nav = [
   { href: '/requests', label: 'Requests', icon: Send },
   { href: '/widgets', label: 'Widgets', icon: Code2 },
   { href: '/exports', label: 'Exports', icon: FileDown },
+  { href: '/profile', label: 'Profile', icon: Settings },
 ];
 
 export function DashboardShell({ active, title, description, children, actions }: { active: string; title: string; description: string; children: React.ReactNode; actions?: React.ReactNode }) {

@@ -8,7 +8,12 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const { workspace, form } = await ensureWorkspace({ id: user.id, email: user.email });
+    const { workspace, form } = await ensureWorkspace({
+      id: user.id,
+      email: user.email,
+      fullName: typeof user.user_metadata.full_name === 'string' ? user.user_metadata.full_name : undefined,
+      workspaceName: typeof user.user_metadata.workspace_name === 'string' ? user.user_metadata.workspace_name : undefined,
+    });
     const admin = createAdminClient();
     const [testimonials, requests] = await Promise.all([
       admin.from('testimonials').select('id,author_name,author_role,quote,rating,status,created_at').eq('workspace_id', workspace.id).order('created_at', { ascending: false }),

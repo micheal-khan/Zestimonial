@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export async function ensureWorkspace(user: { id: string; email?: string }) {
+export async function ensureWorkspace(user: { id: string; email?: string; fullName?: string; workspaceName?: string }) {
   const admin = createAdminClient();
   const existing = await admin.from('workspaces').select('id,name,slug,brand_color').eq('owner_id', user.id).maybeSingle();
   if (existing.error) throw existing.error;
@@ -11,7 +11,8 @@ export async function ensureWorkspace(user: { id: string; email?: string }) {
   }
   const workspaceId = crypto.randomUUID();
   const emailName = user.email?.split('@')[0] || 'My';
-  const name = `${emailName.charAt(0).toUpperCase()}${emailName.slice()} Studio`;
+  const fallbackName = `${emailName.charAt(0).toUpperCase()}${emailName.slice()} Studio`;
+  const name = user.workspaceName?.trim() || (user.fullName?.trim() ? `${user.fullName.trim()}'s workspace` : fallbackName);
   const slug = `w-${user.id.replaceAll('-', '').slice(0, 12)}`;
   const formId = crypto.randomUUID();
   const workspace = { id: workspaceId, owner_id: user.id, name, slug, brand_color: '#d9f75b' };

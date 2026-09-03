@@ -98,7 +98,7 @@ export default function Home() {
         </nav>
         <div className="mt-auto space-y-1">
           <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#68706b] hover:bg-white hover:text-foreground"><Users className="h-[18px] w-[18px]" /> Team</button>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#68706b] hover:bg-white hover:text-foreground"><Settings className="h-[18px] w-[18px]" /> Settings</button>
+          <Link href="/profile" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#68706b] hover:bg-white hover:text-foreground"><Settings className="h-[18px] w-[18px]" /> Settings</Link>
           <div className="mt-4 rounded-2xl bg-[#e8f9bd] p-4">
             <div className="mb-3 flex items-center justify-between"><Sparkles className="h-5 w-5 text-[#334600]" /><span className="text-xs font-semibold text-[#526126]">FREE PLAN</span></div>
             <p className="text-sm font-semibold text-[#263018]">You’re off to a great start</p><p className="mt-1 text-xs leading-relaxed text-[#66713f]">24 of 50 testimonials collected</p>
