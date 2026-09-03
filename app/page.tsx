@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { ArrowUpRight, BarChart3, Bell, ChevronDown, CircleCheck, Code2, FileDown, Inbox, LayoutGrid, Link2, Menu, MessageSquareQuote, MoreHorizontal, Plus, Search, Send, Settings, Sparkles, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,7 +53,7 @@ export default function Home() {
     <><main className="min-h-screen bg-[var(--shell)] text-foreground">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[244px] flex-col border-r border-[var(--line)] bg-[var(--nav)] px-4 py-5 lg:flex">
         <div className="flex items-center gap-2.5 px-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--ink)] text-white shadow-sm"><MessageSquareQuote className="h-[18px] w-[18px]" /></div>
+          <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-[var(--ink)] shadow-sm"><Image src="/zestimonial-logo.png" alt="" width={32} height={32} className="h-8 w-8 object-contain" priority /></div>
           <span className="text-[1.08rem] font-bold tracking-[-0.03em]">Zestimonial</span>
         </div>
         <div className="mt-7 flex items-center gap-3 rounded-xl border border-[var(--line)] bg-white/70 p-2.5">
