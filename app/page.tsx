@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-const testimonials = [
+const sampleTestimonials = [
   { name: 'Maya Chen', role: 'Founder at Northstar', initials: 'MC', quote: 'Working with Aisha completely changed how we explain our product. The new site feels unmistakably us, and demo bookings climbed in the first week.', time: '18 min ago', tone: 'coral' },
   { name: 'Daniel Okafor', role: 'Product Lead at Plane', initials: 'DO', quote: 'Thoughtful, fast, and incredibly sharp. Every decision was explained clearly, and the finished experience was better than we imagined.', time: 'Yesterday', tone: 'blue' },
   { name: 'Olivia Martin', role: 'Creative Director', initials: 'OM', quote: 'Aisha has that rare ability to turn a fuzzy idea into something beautiful and useful. I would work with her again in a heartbeat.', time: '2 days ago', tone: 'yellow' },
@@ -27,6 +27,11 @@ export default function Home() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [requestCreated, setRequestCreated] = useState(false);
+  const [formSlug, setFormSlug] = useState('demo');
+  const [workspaceName, setWorkspaceName] = useState('Your workspace');
+  const [testimonials, setTestimonials] = useState(sampleTestimonials);
+  const [stats, setStats] = useState({ total: 0, pendingRequests: 0, approved: 0 });
+  const [databaseMessage, setDatabaseMessage] = useState('');
 
   useEffect(() => {
     const context = (document as Document & { modelContext?: { registerTool?: (tool: unknown, options?: { signal?: AbortSignal }) => void | Promise<void> } }).modelContext;
@@ -43,10 +48,32 @@ export default function Home() {
     return () => lifecycle.abort();
   }, []);
 
+  useEffect(() => {
+    fetch('/api/dashboard').then(async (response) => {
+      if (response.status === 401) { window.location.href = '/login'; return null; }
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to load workspace.');
+      return result;
+    }).then((result) => {
+      if (!result) return;
+      setWorkspaceName(result.workspace.name); setFormSlug(result.form.slug); setStats(result.stats);
+      setTestimonials(result.testimonials.map((item: { author_name: string; author_role: string; quote: string; rating: number; created_at: string }) => ({ name: item.author_name, role: item.author_role, initials: item.author_name.split(' ').map((part) => part[0]).join('').slice(0,2).toUpperCase(), quote: item.quote, time: new Date(item.created_at).toLocaleDateString(), tone: 'blue' })));
+    }).catch((error) => setDatabaseMessage(error.message));
+  }, []);
+
   async function copyLink() {
-    await navigator.clipboard?.writeText(`${window.location.origin}/collect/demo`);
+    await navigator.clipboard?.writeText(`${window.location.origin}/collect/${formSlug}`);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  async function createRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setDatabaseMessage('');
+    const data = new FormData(event.currentTarget);
+    const response = await fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: data.get('clientName'), clientEmail: data.get('clientEmail'), projectName: data.get('projectName') }) });
+    const result = await response.json();
+    if (!response.ok) { setDatabaseMessage(result.error || 'Unable to create request.'); return; }
+    setStats((current) => ({ ...current, pendingRequests: current.pendingRequests + 1 })); setRequestCreated(true);
   }
 
   return (
@@ -58,7 +85,7 @@ export default function Home() {
         </div>
         <div className="mt-7 flex items-center gap-3 rounded-xl border border-[var(--line)] bg-white/70 p-2.5">
           <Avatar className="h-9 w-9 rounded-lg"><AvatarFallback className="rounded-lg bg-[#d9f75b] text-sm font-bold text-[#263018]">AS</AvatarFallback></Avatar>
-          <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">Aisha Studio</p><p className="truncate text-xs text-muted-foreground">Personal workspace</p></div>
+          <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{workspaceName}</p><p className="truncate text-xs text-muted-foreground">Personal workspace</p></div>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </div>
         <nav className="mt-7 space-y-1" aria-label="Main navigation">
@@ -94,12 +121,12 @@ export default function Home() {
             <Button onClick={copyLink} variant="outline" className="w-fit rounded-xl bg-white"><Link2 /> {copied ? 'Link copied' : 'Copy collection link'}</Button>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Metric icon={MessageSquareQuote} value="24" label="Total testimonials" note="+4 this month" tint="lime" /><Metric icon={Inbox} value="8" label="Awaiting reply" note="3 viewed recently" tint="lavender" /><Metric icon={CircleCheck} value="91%" label="Approval rate" note="21 published" tint="sky" /><Metric icon={BarChart3} value="1,284" label="Widget views" note="+18% this month" tint="peach" />
+            <Metric icon={MessageSquareQuote} value={String(stats.total)} label="Total testimonials" note="All responses" tint="lime" /><Metric icon={Inbox} value={String(stats.pendingRequests)} label="Awaiting reply" note="Open requests" tint="lavender" /><Metric icon={CircleCheck} value={stats.total ? `${Math.round(stats.approved / stats.total * 100)}%` : '0%'} label="Approval rate" note={`${stats.approved} published`} tint="sky" /><Metric icon={BarChart3} value="0" label="Widget views" note="Analytics coming next" tint="peach" />
           </div>
           <div className="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,.75fr)]">
             <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(36,49,43,.035)]">
               <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4 md:px-6"><div><h2 className="text-lg font-bold tracking-tight">Fresh from your clients</h2><p className="mt-0.5 text-sm text-muted-foreground">Review and publish your latest responses.</p></div><Button variant="ghost" className="rounded-xl text-sm">View all <ArrowUpRight /></Button></div>
-              <div className="divide-y divide-[var(--line)]">{testimonials.map((item) => <TestimonialRow key={item.name} {...item} />)}</div>
+              <div className="divide-y divide-[var(--line)]">{testimonials.length ? testimonials.map((item) => <TestimonialRow key={`${item.name}-${item.time}`} {...item} />) : <div className="px-6 py-14 text-center"><MessageSquareQuote className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 font-bold">No testimonials yet</p><p className="mt-1 text-sm text-muted-foreground">Copy your collection link or create a request to get started.</p></div>}</div>
             </section>
             <aside className="space-y-6">
               <section className="relative overflow-hidden rounded-[22px] bg-[var(--ink)] p-6 text-white shadow-[0_16px_40px_rgba(30,50,41,.14)]">
@@ -118,9 +145,9 @@ export default function Home() {
     </main>
     <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
       <DialogContent className="rounded-[22px] p-6 sm:max-w-lg">
-        {requestCreated ? <div className="py-6 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#e8f9bd]"><CircleCheck className="h-7 w-7 text-[#405216]" /></span><DialogTitle className="mt-5 text-xl">Your request is ready</DialogTitle><DialogDescription className="mt-2">Share the collection link with your client. They won’t need an account.</DialogDescription><Button onClick={copyLink} className="mt-6 rounded-xl bg-[var(--ink)]"><Link2 /> {copied ? 'Copied' : 'Copy request link'}</Button></div> : <form onSubmit={(event) => { event.preventDefault(); setRequestCreated(true); }}>
+        {requestCreated ? <div className="py-6 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#e8f9bd]"><CircleCheck className="h-7 w-7 text-[#405216]" /></span><DialogTitle className="mt-5 text-xl">Your request is ready</DialogTitle><DialogDescription className="mt-2">Share the collection link with your client. They won’t need an account.</DialogDescription><Button onClick={copyLink} className="mt-6 rounded-xl bg-[var(--ink)]"><Link2 /> {copied ? 'Copied' : 'Copy request link'}</Button></div> : <form onSubmit={createRequest}>
           <DialogHeader><DialogTitle className="text-xl font-bold">Create a testimonial request</DialogTitle><DialogDescription>Personalize the invitation. Your client can respond in under two minutes.</DialogDescription></DialogHeader>
-          <div className="mt-5 space-y-4"><label className="grid gap-1.5 text-sm font-semibold">Client name<Input required className="h-11 rounded-xl" placeholder="e.g. Maya Chen" /></label><label className="grid gap-1.5 text-sm font-semibold">Client email<Input required type="email" className="h-11 rounded-xl" placeholder="maya@company.com" /></label><label className="grid gap-1.5 text-sm font-semibold">Project or service<Input className="h-11 rounded-xl" placeholder="Brand and website redesign" /></label></div>
+          <div className="mt-5 space-y-4"><label className="grid gap-1.5 text-sm font-semibold">Client name<Input name="clientName" required className="h-11 rounded-xl" placeholder="e.g. Maya Chen" /></label><label className="grid gap-1.5 text-sm font-semibold">Client email<Input name="clientEmail" required type="email" className="h-11 rounded-xl" placeholder="maya@company.com" /></label><label className="grid gap-1.5 text-sm font-semibold">Project or service<Input name="projectName" className="h-11 rounded-xl" placeholder="Brand and website redesign" /></label>{databaseMessage && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{databaseMessage}</p>}</div>
           <DialogFooter className="mt-6 -mx-6 -mb-6 px-6"><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Cancel</Button><Button type="submit" className="bg-[var(--ink)]">Create request</Button></DialogFooter>
         </form>}
       </DialogContent>
@@ -132,6 +159,6 @@ function Metric({ icon: Icon, value, label, note, tint }: { icon: typeof Inbox; 
   return <div className="rounded-[20px] border border-[var(--line)] bg-white p-5 shadow-[0_8px_30px_rgba(36,49,43,.03)]"><div className="flex items-start justify-between"><span className={`metric-icon ${tint}`}><Icon className="h-[18px] w-[18px]" /></span><MoreHorizontal className="h-5 w-5 text-muted-foreground" /></div><p className="mt-5 text-3xl font-bold tracking-[-0.04em]">{value}</p><p className="mt-1 text-sm font-semibold">{label}</p><p className="mt-3 text-xs text-muted-foreground">{note}</p></div>;
 }
 
-function TestimonialRow({ name, role, initials, quote, time, tone }: (typeof testimonials)[number]) {
+function TestimonialRow({ name, role, initials, quote, time, tone }: (typeof sampleTestimonials)[number]) {
   return <article className="group px-5 py-5 transition hover:bg-[#fbfdf8] md:px-6"><div className="flex items-start gap-3.5"><Avatar className="h-10 w-10 shrink-0"><AvatarFallback className={`avatar-${tone} text-xs font-bold`}>{initials}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h3 className="text-sm font-bold">{name}</h3><span className="text-xs text-muted-foreground">{role}</span><span className="ml-auto text-xs text-muted-foreground">{time}</span></div><div className="mt-2 flex gap-0.5 text-[#f2b744]">{[1,2,3,4,5].map((n)=><Star key={n} className="h-3.5 w-3.5 fill-current" />)}</div><p className="mt-2 max-w-3xl text-[15px] leading-6 text-[#46514c]">“{quote}”</p><div className="mt-3 flex items-center gap-2"><Badge variant="secondary" className="bg-[#edf7df] text-[#4e671f]">New</Badge><button className="text-xs font-semibold text-muted-foreground hover:text-foreground">Review response</button></div></div></div></article>;
 }
