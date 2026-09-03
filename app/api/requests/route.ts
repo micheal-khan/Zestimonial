@@ -4,6 +4,12 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { ensureWorkspace } from '@/lib/workspace';
 import { sendTestimonialRequest } from '@/lib/email';
 
+export async function GET() {
+  const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try { const { workspace, form } = await ensureWorkspace({ id: user.id, email: user.email }); const result = await createAdminClient().from('testimonial_requests').select('*').eq('workspace_id', workspace.id).order('created_at', { ascending: false }); if (result.error) throw result.error; return NextResponse.json({ requests: result.data, formSlug: form.slug }); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load requests.' }, { status: 500 }); }
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ArrowUpRight, BarChart3, Bell, ChevronDown, CircleCheck, Code2, FileDown, Inbox, LayoutGrid, Link2, Menu, MessageSquareQuote, MoreHorizontal, Plus, Search, Send, Settings, Sparkles, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,11 +17,11 @@ const sampleTestimonials = [
 ];
 
 const nav = [
-  { label: 'Overview', icon: LayoutGrid, active: true },
-  { label: 'Testimonials', icon: MessageSquareQuote, count: 24 },
-  { label: 'Requests', icon: Send, count: 8 },
-  { label: 'Widgets', icon: Code2 },
-  { label: 'Exports', icon: FileDown },
+  { label: 'Overview', icon: LayoutGrid, active: true, href: '/' },
+  { label: 'Testimonials', icon: MessageSquareQuote, href: '/testimonials' },
+  { label: 'Requests', icon: Send, href: '/requests' },
+  { label: 'Widgets', icon: Code2, href: '/widgets' },
+  { label: 'Exports', icon: FileDown, href: '/exports' },
 ];
 
 export default function Home() {
@@ -89,10 +90,10 @@ export default function Home() {
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </div>
         <nav className="mt-7 space-y-1" aria-label="Main navigation">
-          {nav.map(({ label, icon: Icon, active, count }) => (
-            <button key={label} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${active ? 'bg-[var(--ink)] font-semibold text-white shadow-sm' : 'font-medium text-[#68706b] hover:bg-white hover:text-foreground'}`}>
-              <Icon className="h-[18px] w-[18px]" /><span className="flex-1">{label}</span>{count ? <span className={`text-xs ${active ? 'text-white/70' : 'text-muted-foreground'}`}>{count}</span> : null}
-            </button>
+          {nav.map(({ label, icon: Icon, active, href }) => (
+            <Link href={href} key={label} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${active ? 'bg-[var(--ink)] font-semibold text-white shadow-sm' : 'font-medium text-[#68706b] hover:bg-white hover:text-foreground'}`}>
+              <Icon className="h-[18px] w-[18px]" /><span className="flex-1">{label}</span>
+            </Link>
           ))}
         </nav>
         <div className="mt-auto space-y-1">
@@ -125,7 +126,7 @@ export default function Home() {
           </div>
           <div className="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,.75fr)]">
             <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(36,49,43,.035)]">
-              <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4 md:px-6"><div><h2 className="text-lg font-bold tracking-tight">Fresh from your clients</h2><p className="mt-0.5 text-sm text-muted-foreground">Review and publish your latest responses.</p></div><Button variant="ghost" className="rounded-xl text-sm">View all <ArrowUpRight /></Button></div>
+              <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4 md:px-6"><div><h2 className="text-lg font-bold tracking-tight">Fresh from your clients</h2><p className="mt-0.5 text-sm text-muted-foreground">Review and publish your latest responses.</p></div><Button render={<Link href="/testimonials"/>} variant="ghost" className="rounded-xl text-sm">View all <ArrowUpRight /></Button></div>
               <div className="divide-y divide-[var(--line)]">{testimonials.length ? testimonials.map((item) => <TestimonialRow key={`${item.name}-${item.time}`} {...item} />) : <div className="px-6 py-14 text-center"><MessageSquareQuote className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 font-bold">No testimonials yet</p><p className="mt-1 text-sm text-muted-foreground">Copy your collection link or create a request to get started.</p></div>}</div>
             </section>
             <aside className="space-y-6">
@@ -136,7 +137,7 @@ export default function Home() {
               <section className="rounded-[22px] border border-[var(--line)] bg-white p-5 shadow-[0_8px_30px_rgba(36,49,43,.035)]">
                 <div className="flex items-center justify-between"><h2 className="font-bold">Live widget</h2><Badge variant="secondary" className="bg-[#e9f9bd] text-[#405216]">Published</Badge></div>
                 <div className="mt-4 rounded-2xl border border-[#dfe5df] bg-[#f7f9f7] p-4"><div className="flex gap-0.5 text-[#f4b740]">{[1,2,3,4,5].map((n)=><Star key={n} className="h-3.5 w-3.5 fill-current" />)}</div><p className="mt-3 text-sm font-medium leading-6">“Aisha made the whole process feel effortless.”</p><div className="mt-4 flex items-center gap-2"><Avatar className="h-7 w-7"><AvatarFallback className="bg-[#dbe8ff] text-[10px] font-bold">MC</AvatarFallback></Avatar><div><p className="text-xs font-bold">Maya Chen</p><p className="text-[11px] text-muted-foreground">Northstar</p></div></div></div>
-                <Button variant="outline" className="mt-4 w-full rounded-xl"><Code2 /> Customize widget</Button>
+                <Button render={<Link href="/widgets"/>} variant="outline" className="mt-4 w-full rounded-xl"><Code2 /> Customize widget</Button>
               </section>
             </aside>
           </div>

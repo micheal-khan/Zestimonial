@@ -101,6 +101,12 @@ button { cursor: pointer; }
 .avatar-blue { background: #dce9ff; color: #32548a; }
 .avatar-yellow { background: #faedba; color: #745d14; }
 
+@media print {
+  aside, header, button { display: none !important; }
+  main, main > div { padding: 0 !important; background: white !important; }
+  article { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
