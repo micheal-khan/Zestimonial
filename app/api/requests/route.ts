@@ -15,17 +15,23 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await request.json() as { clientName?: string; clientEmail?: string; projectName?: string };
-  if (!body.clientName || !body.clientEmail) return NextResponse.json({ error: 'Client name and email are required.' }, { status: 400 });
+  if (!body.clientName?.trim() || !body.clientEmail?.trim()) return NextResponse.json({ error: 'Client name and email are required.' }, { status: 400 });
+  if (!/^\S+@\S+\.\S+$/.test(body.clientEmail.trim())) return NextResponse.json({ error: 'Enter a valid client email address.' }, { status: 400 });
   try {
     const { workspace, form } = await ensureWorkspace({ id: user.id, email: user.email });
     const admin = createAdminClient();
     const created = await admin.from('testimonial_requests').insert({ workspace_id: workspace.id, form_id: form.id, client_name: body.clientName.trim(), client_email: body.clientEmail.trim(), project_name: body.projectName?.trim() || null, status: 'draft' }).select('id,status').single();
     if (created.error) throw created.error;
     const origin = new URL(request.url).origin;
-    const collectionUrl = `${origin}/collect/${form.slug}`;
+    const collectionUrl = `${origin}/collect/${form.slug}?request=${created.data.id}`;
     let emailSent = false;
-    try { emailSent = (await sendTestimonialRequest({ to: body.clientEmail, clientName: body.clientName, workspaceName: workspace.name, collectionUrl })).sent; } catch { /* The saved request remains available if email delivery fails. */ }
+    let emailError: string | undefined;
+    try {
+      const delivery = await sendTestimonialRequest({ to: body.clientEmail.trim(), clientName: body.clientName.trim(), workspaceName: workspace.name, collectionUrl });
+      emailSent = delivery.sent;
+      if (!delivery.sent) emailError = 'Email delivery is not configured yet.';
+    } catch { emailError = 'The request was saved, but its email could not be delivered.'; }
     if (emailSent) await admin.from('testimonial_requests').update({ status: 'sent' }).eq('id', created.data.id);
-    return NextResponse.json({ request: created.data, collectionUrl, emailSent }, { status: 201 });
+    return NextResponse.json({ request: { ...created.data, status: emailSent ? 'sent' : 'draft' }, collectionUrl, emailSent, emailError }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create request.' }, { status: 503 }); }
 }

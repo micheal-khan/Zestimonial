@@ -28,6 +28,9 @@ export default function Home() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [requestCreated, setRequestCreated] = useState(false);
+  const [requestLink, setRequestLink] = useState('');
+  const [requestEmailSent, setRequestEmailSent] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [formSlug, setFormSlug] = useState('demo');
   const [workspaceName, setWorkspaceName] = useState('Your workspace');
   const [testimonials, setTestimonials] = useState(sampleTestimonials);
@@ -68,12 +71,19 @@ export default function Home() {
     window.setTimeout(() => setCopied(false), 1800);
   }
 
+  async function copyRequestLink() {
+    await navigator.clipboard?.writeText(requestLink || `${window.location.origin}/collect/${formSlug}`);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
   async function createRequest(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setDatabaseMessage('');
     const data = new FormData(event.currentTarget);
     const response = await fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: data.get('clientName'), clientEmail: data.get('clientEmail'), projectName: data.get('projectName') }) });
     const result = await response.json();
     if (!response.ok) { setDatabaseMessage(result.error || 'Unable to create request.'); return; }
+    setRequestLink(result.collectionUrl || ''); setRequestEmailSent(Boolean(result.emailSent));
     setStats((current) => ({ ...current, pendingRequests: current.pendingRequests + 1 })); setRequestCreated(true);
   }
 
@@ -112,7 +122,7 @@ export default function Home() {
           <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu"><Menu /></Button>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex"><span>Workspace</span><span>/</span><span className="font-medium text-foreground">Overview</span></div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="icon" className="rounded-xl bg-white" aria-label="Search"><Search /></Button><Button variant="outline" size="icon" className="rounded-xl bg-white" aria-label="Notifications"><Bell /></Button>
+            <Button variant="outline" size="icon" className="rounded-xl bg-white" aria-label="Search"><Search /></Button><Button onClick={() => setNotificationsOpen(true)} variant="outline" size="icon" className="relative rounded-xl bg-white" aria-label="Notifications"><Bell />{testimonials.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#84a80b]" />}</Button>
             <Button onClick={() => setRequestOpen(true)} className="ml-1 rounded-xl bg-[var(--ink)] px-4 text-white hover:bg-[#26352f]"><Plus /> New request</Button>
           </div>
         </header>
@@ -144,15 +154,16 @@ export default function Home() {
         </section>
       </div>
     </main>
-    <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
+    <Dialog open={requestOpen} onOpenChange={(open) => { setRequestOpen(open); if (!open) { setRequestCreated(false); setRequestLink(''); setRequestEmailSent(false); } }}>
       <DialogContent className="rounded-[22px] p-6 sm:max-w-lg">
-        {requestCreated ? <div className="py-6 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#e8f9bd]"><CircleCheck className="h-7 w-7 text-[#405216]" /></span><DialogTitle className="mt-5 text-xl">Your request is ready</DialogTitle><DialogDescription className="mt-2">Share the collection link with your client. They won’t need an account.</DialogDescription><Button onClick={copyLink} className="mt-6 rounded-xl bg-[var(--ink)]"><Link2 /> {copied ? 'Copied' : 'Copy request link'}</Button></div> : <form onSubmit={createRequest}>
+        {requestCreated ? <div className="py-6 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#e8f9bd]"><CircleCheck className="h-7 w-7 text-[#405216]" /></span><DialogTitle className="mt-5 text-xl">Your request is ready</DialogTitle><DialogDescription className="mt-2">{requestEmailSent ? 'The personalized request email has been sent. You can also copy its private link below.' : 'The request was saved, but email delivery is not configured. Copy the private link and share it manually.'}</DialogDescription><Button onClick={copyRequestLink} className="mt-6 rounded-xl bg-[var(--ink)]"><Link2 /> {copied ? 'Copied' : 'Copy private request link'}</Button></div> : <form onSubmit={createRequest}>
           <DialogHeader><DialogTitle className="text-xl font-bold">Create a testimonial request</DialogTitle><DialogDescription>Personalize the invitation. Your client can respond in under two minutes.</DialogDescription></DialogHeader>
           <div className="mt-5 space-y-4"><label className="grid gap-1.5 text-sm font-semibold">Client name<Input name="clientName" required className="h-11 rounded-xl" placeholder="e.g. Maya Chen" /></label><label className="grid gap-1.5 text-sm font-semibold">Client email<Input name="clientEmail" required type="email" className="h-11 rounded-xl" placeholder="maya@company.com" /></label><label className="grid gap-1.5 text-sm font-semibold">Project or service<Input name="projectName" className="h-11 rounded-xl" placeholder="Brand and website redesign" /></label>{databaseMessage && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{databaseMessage}</p>}</div>
           <DialogFooter className="mt-6 -mx-6 -mb-6 px-6"><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Cancel</Button><Button type="submit" className="bg-[var(--ink)]">Create request</Button></DialogFooter>
         </form>}
       </DialogContent>
-    </Dialog></>
+    </Dialog>
+    <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}><DialogContent className="rounded-[22px] p-6 sm:max-w-lg"><DialogHeader><DialogTitle className="text-xl font-bold">Notifications</DialogTitle><DialogDescription>New testimonial activity in your workspace.</DialogDescription></DialogHeader><div className="mt-4 space-y-3">{testimonials.length ? testimonials.slice(0, 5).map((testimonial) => <div key={`${testimonial.name}-${testimonial.time}`} className="rounded-xl bg-[#f5f7f3] p-4"><p className="font-bold">New testimonial from {testimonial.name}</p><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{testimonial.quote}</p><Link onClick={() => setNotificationsOpen(false)} href="/testimonials" className="mt-3 inline-block text-sm font-bold underline underline-offset-4">Review response</Link></div>) : <p className="py-8 text-center text-sm text-muted-foreground">You’re all caught up.</p>}</div></DialogContent></Dialog></>
   );
 }
 
