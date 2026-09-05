@@ -20,6 +20,12 @@ export default function LoginPage() {
     const emailValue = data.get('email'); const passwordValue = data.get('password');
     const email = typeof emailValue === 'string' ? emailValue.trim() : '';
     const password = typeof passwordValue === 'string' ? passwordValue : '';
+    const fullNameValue = data.get('fullName'); const workspaceNameValue = data.get('workspaceName');
+    const fullName = typeof fullNameValue === 'string' ? fullNameValue.trim() : '';
+    const workspaceName = typeof workspaceNameValue === 'string' ? workspaceNameValue.trim() : '';
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { setMessage('Enter a valid email address.'); setLoading(false); return; }
+    if (mode === 'signup' && (!fullName || !workspaceName)) { setMessage('Enter your name and a workspace name to create your account.'); setLoading(false); return; }
+    if (mode !== 'forgot' && password.length < 8) { setMessage('Your password must be at least 8 characters.'); setLoading(false); return; }
     const supabase = createClient();
     if (!supabase) { setMessage('Authentication is not configured yet.'); setLoading(false); return; }
     if (mode === 'forgot') {
@@ -27,7 +33,7 @@ export default function LoginPage() {
       setMessage(result.error ? result.error.message : 'Password reset instructions are on their way. Check your inbox.'); setLoading(false); return;
     }
     const result = mode === 'signup'
-      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/`, data: { full_name: data.get('fullName'), workspace_name: data.get('workspaceName') } } })
+      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/`, data: { full_name: fullName, workspace_name: workspaceName } } })
       : await supabase.auth.signInWithPassword({ email, password });
     setMessage(result.error ? result.error.message : mode === 'signup' ? 'Account created. Check your email to confirm your address.' : 'Signed in successfully.'); setLoading(false);
     if (!result.error && mode === 'signin') window.location.href = '/';
@@ -37,7 +43,7 @@ export default function LoginPage() {
   const intro = mode === 'signin' ? 'Your client stories are waiting.' : mode === 'signup' ? 'No card required. Start collecting today.' : 'We’ll email you a secure reset link.';
   return <main className="grid min-h-screen bg-[var(--shell)] lg:grid-cols-[.8fr_1.2fr]">
     <section className="flex flex-col justify-between bg-[var(--ink)] p-7 text-white sm:p-12"><div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl"><Image src="/zestimonial-logo.png" alt="" width={38} height={38} /></span><span className="text-lg font-bold">Zestimonial</span></div><div className="my-16 max-w-md"><p className="text-sm font-bold text-[#d9f75b]">CLIENT STORIES, ALL IN ONE PLACE</p><h1 className="mt-4 text-4xl font-bold tracking-[-0.05em] sm:text-5xl">Kind words deserve a beautiful home.</h1><div className="mt-8 space-y-4 text-sm text-white/70">{['Collect without awkward follow-ups','Publish beautiful widgets anywhere','Export polished testimonial graphics'].map((x)=><p key={x} className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-[#d9f75b]" />{x}</p>)}</div></div><p className="text-xs text-white/40">© 2026 Zestimonial</p></section>
-    <section className="grid place-items-center px-6 py-12"><div className="w-full max-w-md"><p className="text-sm font-semibold text-muted-foreground">WELCOME TO ZESTIMONIAL</p><h2 className="mt-2 text-3xl font-bold tracking-tight">{heading}</h2><p className="mt-2 text-muted-foreground">{intro}</p><form onSubmit={submit} className="mt-8 space-y-5">
+    <section className="grid place-items-center px-6 py-12"><div className="w-full max-w-md"><p className="text-sm font-semibold text-muted-foreground">WELCOME TO ZESTIMONIAL</p><h2 className="mt-2 text-3xl font-bold tracking-tight">{heading}</h2><p className="mt-2 text-muted-foreground">{intro}</p><form noValidate onSubmit={submit} className="mt-8 space-y-5">
       {mode === 'signup' && <><label htmlFor="fullName" className="grid gap-2 text-sm font-bold">Your name<Input id="fullName" name="fullName" required className="h-12 rounded-xl bg-white" placeholder="Aisha Shah" /></label><label htmlFor="workspaceName" className="grid gap-2 text-sm font-bold">Workspace name<Input id="workspaceName" name="workspaceName" required className="h-12 rounded-xl bg-white" placeholder="Aisha Studio" /></label></>}
       <label htmlFor="email" className="grid gap-2 text-sm font-bold">Email address<Input id="email" name="email" required type="email" className="h-12 rounded-xl bg-white" placeholder="you@company.com" /></label>
       {mode !== 'forgot' && <label htmlFor="password" className="grid gap-2 text-sm font-bold">Password<Input id="password" name="password" required minLength={8} type="password" className="h-12 rounded-xl bg-white" placeholder="At least 8 characters" /></label>}
