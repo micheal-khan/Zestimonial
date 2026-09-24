@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ensureWorkspace } from '@/lib/workspace';
 import { sendTestimonialRequest } from '@/lib/email';
+import { appUrl } from '@/lib/reminders';
 
 export async function GET() {
   const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser();
@@ -22,8 +23,7 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
     const created = await admin.from('testimonial_requests').insert({ workspace_id: workspace.id, form_id: form.id, client_name: body.clientName.trim(), client_email: body.clientEmail.trim(), project_name: body.projectName?.trim() || null, status: 'draft' }).select('id,status').single();
     if (created.error) throw created.error;
-    const origin = new URL(request.url).origin;
-    const collectionUrl = `${origin}/collect/${form.slug}?request=${created.data.id}`;
+    const collectionUrl = `${appUrl(request)}/collect/${form.slug}?request=${created.data.id}`;
     let emailSent = false;
     let emailError: string | undefined;
     try {
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       emailSent = delivery.sent;
       if (!delivery.sent) emailError = 'Email delivery is not configured yet.';
     } catch { emailError = 'The request was saved, but its email could not be delivered.'; }
-    if (emailSent) await admin.from('testimonial_requests').update({ status: 'sent' }).eq('id', created.data.id);
+    if (emailSent) await admin.from('testimonial_requests').update({ status: 'sent', last_sent_at: new Date().toISOString() }).eq('id', created.data.id);
     return NextResponse.json({ request: { ...created.data, status: emailSent ? 'sent' : 'draft' }, collectionUrl, emailSent, emailError }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create request.' }, { status: 503 }); }
 }

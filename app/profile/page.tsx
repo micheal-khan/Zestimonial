@@ -1,12 +1,14 @@
 'use client';
 
 import { SyntheticEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { LogOut, Save, UserRound } from 'lucide-react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 
-type Profile = { email: string; fullName: string; workspaceName: string; brandColor: string };
+type Profile = { email: string; fullName: string; workspaceName: string; workspaceSlug: string; brandColor: string; wallEnabled: boolean; wallHeadline: string; autoReminders: boolean };
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -33,6 +35,11 @@ export default function ProfilePage() {
           <label htmlFor="profileEmail" className="grid gap-2 text-sm font-bold">Email address<Input id="profileEmail" value={profile.email} disabled className="h-12 rounded-xl bg-[#f5f6f2]" /></label>
           <label htmlFor="workspaceName" className="grid gap-2 text-sm font-bold sm:col-span-2">Workspace name<Input id="workspaceName" value={profile.workspaceName} onChange={(event) => setProfile({ ...profile, workspaceName: event.target.value })} required className="h-12 rounded-xl" /></label>
           <label htmlFor="brandColorText" className="grid gap-2 text-sm font-bold sm:col-span-2">Brand color<div className="flex gap-3"><Input aria-label="Brand color picker" type="color" value={profile.brandColor} onChange={(event) => setProfile({ ...profile, brandColor: event.target.value })} className="h-12 w-16 rounded-xl p-1" /><Input id="brandColorText" value={profile.brandColor} onChange={(event) => setProfile({ ...profile, brandColor: event.target.value })} pattern="#[0-9a-fA-F]{6}" required className="h-12 rounded-xl font-mono" /></div></label>
+          <div className="space-y-4 border-t border-[var(--line)] pt-5 sm:col-span-2">
+            <div className="flex items-start justify-between gap-4 text-sm"><span><span className="block font-bold">Public Wall of Love</span><span className="text-muted-foreground">Show approved testimonials at <Link href={`/love/${profile.workspaceSlug}`} target="_blank" className="font-semibold underline underline-offset-4">/love/{profile.workspaceSlug}</Link></span></span><Switch aria-label="Public Wall of Love" checked={profile.wallEnabled} onCheckedChange={(value) => setProfile({ ...profile, wallEnabled: value })} /></div>
+            {profile.wallEnabled && <label htmlFor="wallHeadline" className="grid gap-2 text-sm font-bold">Wall of Love headline<Input id="wallHeadline" value={profile.wallHeadline} maxLength={120} onChange={(event) => setProfile({ ...profile, wallHeadline: event.target.value })} placeholder={`What clients say about ${profile.workspaceName}`} className="h-12 rounded-xl" /></label>}
+            <div className="flex items-start justify-between gap-4 text-sm"><span><span className="block font-bold">Automatic follow-ups</span><span className="text-muted-foreground">Politely remind clients who haven’t replied after 3 and 7 days.</span></span><Switch aria-label="Automatic follow-ups" checked={profile.autoReminders} onCheckedChange={(value) => setProfile({ ...profile, autoReminders: value })} /></div>
+          </div>
         </div>}
         {message && <output className="mt-5 block rounded-xl bg-[#eef3e8] p-3 text-sm text-[#506043]">{message}</output>}
         <Button disabled={!profile || saving} className="mt-6 rounded-xl bg-[var(--ink)]"><Save /> {saving ? 'Saving…' : 'Save changes'}</Button>

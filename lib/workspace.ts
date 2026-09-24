@@ -11,7 +11,7 @@ export async function ensureWorkspace(user: { id: string; email?: string; fullNa
   }
   const workspaceId = crypto.randomUUID();
   const emailName = user.email?.split('@')[0] || 'My';
-  const fallbackName = `${emailName.charAt(0).toUpperCase()}${emailName.slice()} Studio`;
+  const fallbackName = `${emailName.charAt(0).toUpperCase()}${emailName.slice(1)} Studio`;
   const name = user.workspaceName?.trim() || (user.fullName?.trim() ? `${user.fullName.trim()}'s workspace` : fallbackName);
   const slug = `w-${user.id.replaceAll('-', '').slice(0, 12)}`;
   const formId = crypto.randomUUID();

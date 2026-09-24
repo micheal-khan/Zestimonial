@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowUpRight, BarChart3, Bell, ChevronDown, CircleCheck, Code2, FileDown, Inbox, LayoutGrid, Link2, Menu, MessageSquareQuote, MoreHorizontal, Plus, Search, Send, Settings, Sparkles, Star, Users } from 'lucide-react';
+import { ArrowUpRight, BarChart3, Bell, ChevronDown, CircleCheck, Code2, FileDown, Heart, Inbox, LayoutGrid, Link2, Menu, MessageSquareQuote, MoreHorizontal, Plus, Search, Send, Settings, Sparkles, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -33,6 +33,7 @@ export default function Home() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [formSlug, setFormSlug] = useState('demo');
   const [workspaceName, setWorkspaceName] = useState('Your workspace');
+  const [workspaceSlug, setWorkspaceSlug] = useState('');
   const [testimonials, setTestimonials] = useState(sampleTestimonials);
   const [stats, setStats] = useState({ total: 0, pendingRequests: 0, approved: 0 });
   const [databaseMessage, setDatabaseMessage] = useState('');
@@ -60,7 +61,7 @@ export default function Home() {
       return result;
     }).then((result) => {
       if (!result) return;
-      setWorkspaceName(result.workspace.name); setFormSlug(result.form.slug); setStats(result.stats);
+      setWorkspaceName(result.workspace.name); setWorkspaceSlug(result.workspace.slug); setFormSlug(result.form.slug); setStats(result.stats);
       setTestimonials(result.testimonials.map((item: { author_name: string; author_role: string; quote: string; rating: number; created_at: string }) => ({ name: item.author_name, role: item.author_role, initials: item.author_name.split(' ').map((part) => part[0]).join('').slice(0,2).toUpperCase(), quote: item.quote, time: new Date(item.created_at).toLocaleDateString(), tone: 'blue' })));
     }).catch((error) => setDatabaseMessage(error.message));
   }, []);
@@ -129,7 +130,7 @@ export default function Home() {
         <section className="mx-auto max-w-[1440px] px-5 py-7 md:px-8 md:py-9">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div><p className="text-sm font-semibold text-[#69736e]">THURSDAY, SEPTEMBER 3</p><h1 className="mt-1 text-3xl font-bold tracking-[-0.045em] sm:text-[2.45rem]">Good afternoon, Aisha.</h1><p className="mt-2 text-base text-muted-foreground">Your words are working hard. Here’s what’s happening.</p></div>
-            <Button onClick={copyLink} variant="outline" className="w-fit rounded-xl bg-white"><Link2 /> {copied ? 'Link copied' : 'Copy collection link'}</Button>
+            <div className="flex flex-wrap gap-2">{workspaceSlug && <Button render={<Link href={`/love/${workspaceSlug}`} target="_blank" />} variant="outline" className="w-fit rounded-xl bg-white"><Heart /> Wall of Love</Button>}<Button onClick={copyLink} variant="outline" className="w-fit rounded-xl bg-white"><Link2 /> {copied ? 'Link copied' : 'Copy collection link'}</Button></div>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Metric icon={MessageSquareQuote} value={String(stats.total)} label="Total testimonials" note="All responses" tint="lime" /><Metric icon={Inbox} value={String(stats.pendingRequests)} label="Awaiting reply" note="Open requests" tint="lavender" /><Metric icon={CircleCheck} value={stats.total ? `${Math.round(stats.approved / stats.total * 100)}%` : '0%'} label="Approval rate" note={`${stats.approved} published`} tint="sky" /><Metric icon={BarChart3} value="0" label="Widget views" note="Analytics coming next" tint="peach" />

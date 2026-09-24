@@ -1,5 +1,42 @@
 'use client';
-import { useEffect,useState } from 'react';
-import { Star } from 'lucide-react';
-type Data={widget:{name:string;layout:string;theme:string};testimonials:Array<{id:string;author_name:string;author_role:string;quote:string;rating:number}>};
-export default function EmbedPage({params}:{params:Promise<{id:string}>}){const[data,setData]=useState<Data|null>(null);const[error,setError]=useState(false);useEffect(()=>{params.then(({id})=>fetch(`/api/public/widgets/${id}`).then(r=>{if(!r.ok)throw new Error();return r.json()}).then(setData).catch(()=>setError(true)))},[params]);if(error)return <main className="grid min-h-screen place-items-center p-6 text-sm text-muted-foreground">This widget is unavailable.</main>;if(!data)return <main className="grid min-h-screen place-items-center p-6 text-sm text-muted-foreground">Loading testimonials…</main>;const dark=data.widget.theme==='dark';return <main className={`min-h-screen p-5 ${dark?'bg-[#18231e] text-white':'bg-[#f5f7f3] text-[#21322b]'}`}><div className={`mx-auto grid max-w-5xl gap-4 ${data.widget.layout==='grid'?'md:grid-cols-2':'grid-cols-1'}`}>{data.testimonials.length?data.testimonials.map(t=><article key={t.id} className={`rounded-2xl p-6 ${dark?'bg-white/8 ring-1 ring-white/10':'bg-white shadow-sm ring-1 ring-black/5'}`}><div className="flex text-[#f2b744]">{Array.from({length:t.rating},(_,i)=><Star key={i} className="h-4 w-4 fill-current"/>)}</div><blockquote className="mt-4 text-lg leading-8">“{t.quote}”</blockquote><p className="mt-5 font-bold">{t.author_name}</p><p className={`text-sm ${dark?'text-white/55':'text-muted-foreground'}`}>{t.author_role}</p></article>):<p className="py-16 text-center text-muted-foreground">Approved testimonials will appear here.</p>}</div></main>}
+
+import { use, useEffect, useRef, useState } from 'react';
+import { TestimonialWidget } from '@/components/testimonial-widget';
+import type { PublicTestimonial, WidgetSettings } from '@/lib/widgets';
+
+type Data = { widget: WidgetSettings; brandColor: string | null; testimonials: PublicTestimonial[] };
+
+export default function EmbedPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const [data, setData] = useState<Data | null>(null);
+  const [error, setError] = useState(false);
+  const root = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    fetch(`/api/public/widgets/${encodeURIComponent(id)}`)
+      .then((response) => { if (!response.ok) throw new Error('Widget unavailable'); return response.json() as Promise<Data>; })
+      .then(setData)
+      .catch(() => setError(true));
+  }, [id]);
+
+  // Blend into the host page and report our height so embed.js can size the iframe.
+  useEffect(() => {
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+    const element = root.current;
+    if (!element || window.parent === window) return;
+    const report = () => window.parent.postMessage({ type: 'zestimonial:resize', id, height: Math.ceil(element.getBoundingClientRect().height) }, '*');
+    const observer = new ResizeObserver(report);
+    observer.observe(element);
+    report();
+    return () => observer.disconnect();
+  }, [id, data, error]);
+
+  return (
+    <main ref={root} className="p-4">
+      {error ? <p className="py-10 text-center text-sm text-muted-foreground">This widget is unavailable.</p>
+        : !data ? <p className="py-10 text-center text-sm text-muted-foreground">Loading testimonials…</p>
+        : <TestimonialWidget settings={data.widget} testimonials={data.testimonials} brandColor={data.brandColor ?? undefined} />}
+    </main>
+  );
+}

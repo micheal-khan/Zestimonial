@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { analyzeAndSave } from '@/lib/ai';
 import { sendNewTestimonialNotification } from '@/lib/email';
 
 export async function POST(request: Request) {
@@ -15,8 +16,12 @@ export async function POST(request: Request) {
       const matchedRequest = await admin.from('testimonial_requests').select('id').eq('id', body.requestId).eq('form_id', form.data.id).eq('workspace_id', form.data.workspace_id).maybeSingle();
       if (matchedRequest.data) requestId = matchedRequest.data.id;
     }
-    const created = await admin.from('testimonials').insert({ workspace_id: form.data.workspace_id, form_id: form.data.id, request_id: requestId, author_name: body.authorName.trim(), author_role: body.authorRole.trim(), quote: body.quote.trim(), rating: body.rating, consent: true, status: 'pending' }).select('id').single();
+    const created = await admin.from('testimonials').insert({ workspace_id: form.data.workspace_id, form_id: form.data.id, request_id: requestId, author_name: body.authorName.trim(), author_role: body.authorRole.trim(), quote: body.quote.trim(), rating: body.rating, consent: true, status: 'pending' }).select('id,quote,author_role').single();
     if (created.error) throw created.error;
+    const saved = created.data;
+    after(async () => {
+      try { await analyzeAndSave(admin, saved); } catch { /* Highlights are optional; the owner can retry from the dashboard. */ }
+    });
     if (requestId) await admin.from('testimonial_requests').update({ status: 'completed' }).eq('id', requestId);
     const workspace = Array.isArray(form.data.workspaces) ? form.data.workspaces[0] : form.data.workspaces;
     if (workspace?.owner_id) {

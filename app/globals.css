@@ -101,6 +101,12 @@ button { cursor: pointer; }
 .avatar-blue { background: #dce9ff; color: #32548a; }
 .avatar-yellow { background: #faedba; color: #745d14; }
 
+.marquee { mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent); }
+.marquee-track { animation: marquee 40s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(calc(-50% - .5rem)); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } .marquee { overflow-x: auto; } }
+
 @media print {
   aside, header, button { display: none !important; }
   main, main > div { padding: 0 !important; background: white !important; }
