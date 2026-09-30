@@ -42,7 +42,7 @@ export default function ProfilePage() {
           </div>
         </div>}
         {message && <output className="mt-5 block rounded-xl bg-[#eef3e8] p-3 text-sm text-[#506043]">{message}</output>}
-        <Button disabled={!profile || saving} className="mt-6 rounded-xl bg-[var(--ink)]"><Save /> {saving ? 'Saving…' : 'Save changes'}</Button>
+        <Button type="submit" disabled={!profile || saving} className="mt-6 rounded-xl bg-[var(--ink)]"><Save /> {saving ? 'Saving…' : 'Save changes'}</Button>
       </form>
       <aside className="space-y-5"><div className="rounded-[22px] border border-[var(--line)] bg-[#e8f9bd] p-6"><p className="text-xs font-bold text-[#526126]">CURRENT PLAN</p><h2 className="mt-2 text-xl font-bold text-[#263018]">Free while we build</h2><p className="mt-2 text-sm leading-relaxed text-[#526126]">All core collection, widget, and export tools are available. Premium billing will come later.</p></div><div className="rounded-[22px] border border-[var(--line)] bg-white p-6"><h2 className="font-bold">Session</h2><p className="mt-2 text-sm text-muted-foreground">Sign out securely on this device.</p><form action="/api/auth/signout" method="post"><Button type="submit" variant="outline" className="mt-5 w-full rounded-xl"><LogOut /> Sign out</Button></form></div></aside>
     </div>

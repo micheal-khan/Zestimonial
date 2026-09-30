@@ -49,7 +49,7 @@ export default function LoginPage() {
       {mode !== 'forgot' && <label htmlFor="password" className="grid gap-2 text-sm font-bold">Password<Input id="password" name="password" required minLength={8} type="password" className="h-12 rounded-xl bg-white" placeholder="At least 8 characters" /></label>}
       {mode === 'signin' && <button type="button" onClick={() => { setMode('forgot'); setMessage(''); }} className="text-sm font-bold underline underline-offset-4">Forgot password?</button>}
       {message && <output className="block rounded-xl bg-[#eef3e8] p-3 text-sm text-[#506043]">{message}</output>}
-      <Button disabled={loading} className="h-12 w-full rounded-xl bg-[var(--ink)] text-base font-bold">{loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create free account' : 'Send reset link'} <ArrowRight /></Button>
+      <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl bg-[var(--ink)] text-base font-bold">{loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create free account' : 'Send reset link'} <ArrowRight /></Button>
     </form><p className="mt-6 text-center text-sm text-muted-foreground">{mode === 'signin' ? 'New to Zestimonial?' : mode === 'signup' ? 'Already have an account?' : 'Remembered your password?'} <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setMessage(''); }} className="font-bold text-foreground underline underline-offset-4">{mode === 'signin' ? 'Create an account' : 'Sign in'}</button></p><p className="mt-10 flex items-center justify-center gap-2 text-xs text-muted-foreground"><Mail className="h-4 w-4" /> Email and password authentication</p></div></section>
   </main>;
 }
