@@ -11,7 +11,10 @@ AI picks the best line. Your clients stay quoted word for word.
 
 <br />
 
+<<<<<<< HEAD
 [![Live demo](https://img.shields.io/badge/live%20demo-zestimonial.vercel.app-d9f75b?style=for-the-badge&labelColor=21322b&logo=vercel&logoColor=white)](https://zestimonial.vercel.app)
+=======
+>>>>>>> 6149b58f958ab6b29107abc77db5ce84e43082dc
 [![Release](https://img.shields.io/github/v/release/micheal-khan/Zestimonial?style=for-the-badge&color=d9f75b&labelColor=21322b&logo=github&logoColor=white)](https://github.com/micheal-khan/Zestimonial/releases)
 [![Stars](https://img.shields.io/github/stars/micheal-khan/Zestimonial?style=for-the-badge&color=d9f75b&labelColor=21322b&logo=github&logoColor=white)](https://github.com/micheal-khan/Zestimonial/stargazers)
 [![Forks](https://img.shields.io/github/forks/micheal-khan/Zestimonial?style=for-the-badge&color=d9f75b&labelColor=21322b&logo=github&logoColor=white)](https://github.com/micheal-khan/Zestimonial/network/members)
@@ -32,7 +35,11 @@ AI picks the best line. Your clients stay quoted word for word.
 ![Resend](https://img.shields.io/badge/Resend-000000?style=flat-square&logo=resend&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
 
+<<<<<<< HEAD
 [**Try it live**](https://zestimonial.vercel.app) · [Features](#features) · [How it works](#how-it-works) · [Getting started](#getting-started) · [Embedding a widget](#embedding-a-widget) · [Deploying](#deploying) · [Project layout](#project-layout)
+=======
+[Features](#features) · [How it works](#how-it-works) · [Getting started](#getting-started) · [Embedding a widget](#embedding-a-widget) · [Deploying](#deploying) · [Project layout](#project-layout)
+>>>>>>> 6149b58f958ab6b29107abc77db5ce84e43082dc
 
 </div>
 
